@@ -1,0 +1,28 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "allowJs": true,
+        "declaration": false,
+        "module": "commonjs",
+        "outDir": "./dist",
+        "removeComments": false,
+        "sourceMap": true,
+        "target": "es6"
+    },
+    "include": [
+        "src/*.ts",
+        "src/liveperson/*.ts"
+      ],
+      "exclude": [
+        "node_modules"
+    ],
+    "files": [
+        "./src/app.ts",
+        "./src/contextprocessor.ts",
+        "./src/liveperson/contenttranslator.ts",
+        "./src/liveperson/livepersonagentlistener.ts",
+        "./src/liveperson/livepersonbotadapter.ts",
+        "./src/liveperson/richcontent.ts",
+        "./src/middleware/testmiddleware.ts"
+    ]
+}

@@ -1,0 +1,27 @@
+{
+  "name": "liveperson-bot-sample",
+  "version": "1.0.0",
+  "description": "A sample bot with LivePerson integration.",
+  "main": "main.js",
+  "scripts": {
+    "postinstall": "tsc"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@types/restify": "^7.2.4",
+    "botbuilder": "^4.0.0-preview1.2",
+    "node-agent-sdk": "^1.0.4",
+    "restify": "^6.4.0",
+    "typescript": "^3.0.3"
+  },
+  "directories": {
+    "src": "src"
+  },
+  "files": [
+    "dist",
+    "src",
+    "tsconfig.json"
+  ],
+  "devDependencies": {}
+}
