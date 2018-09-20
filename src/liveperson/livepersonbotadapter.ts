@@ -2,7 +2,7 @@ import { Agent } from 'node-agent-sdk';
 import { BotAdapter, Promiseable, TurnContext } from 'botbuilder';
 import { Activity, ConversationReference } from 'botframework-schema';
 
-import ContentTranslator from './contenttranslator';
+import { ContentTranslator } from './contenttranslator';
 import { LivePersonAgentListener } from './livepersonagentlistener';
 
 /**
@@ -14,6 +14,7 @@ import { LivePersonAgentListener } from './livepersonagentlistener';
  */
 export class LivePersonBotAdapter extends BotAdapter {
     private livePersonAgent: Agent = null;
+    private contentTranslator: ContentTranslator = null;
     private livePersonAgentListener: LivePersonAgentListener = null;
     private _isConnected: boolean = false;
 
@@ -32,7 +33,8 @@ export class LivePersonBotAdapter extends BotAdapter {
             console.error(`Failed to create/initialize the LivePerson agent: ${error}`)
         }
 
-        this.livePersonAgentListener = new LivePersonAgentListener();
+        this.contentTranslator = new ContentTranslator();
+        this.livePersonAgentListener = new LivePersonAgentListener(this.contentTranslator);
     }
 
     /**
@@ -51,54 +53,33 @@ export class LivePersonBotAdapter extends BotAdapter {
 
     /**
      * From BotAdapter.
-     * Sends the replies of the bot to the LivePerson system after content translation.
+     * Sends the replies of the bot to the LivePerson system after the content translation.
      * 
      * See https://github.com/Microsoft/botbuilder-js/blob/master/libraries/botbuilder/src/botFrameworkAdapter.ts#L500 for reference.
      * 
      * @param context Context for the current turn of conversation with the user.
      * @param activities List of activities to send.
      */
-    public sendActivities(context: TurnContext, activities: Partial<Activity>[]): Promise<any> {       
-        activities.forEach(activity => {
-            if (activity.text !== undefined) {
-                let event : object = {
-                    type: 'ContentEvent',
-                    contentType: 'text/plain',
-                    message: activity.text
+    public sendActivities(context: TurnContext, activities: Partial<Activity>[]): Promise<any> {    
+        return new Promise<boolean>((resolve, reject) => {   
+            activities.forEach(activity => {
+                let event = this.contentTranslator.activityToLivePersonEvent(activity);
+
+                if (event.type == 'RichContent') {
+                    this.livePersonAgent.publishEvent({
+                        dialogId: activity.conversation.id,
+                        event: event
+                    }, this.logErrorMessage, [{type: 'ExternalId', id: 'MY_CARD_ID'}]);
+                } else {
+                    this.livePersonAgent.publishEvent({
+                        dialogId: activity.conversation.id, // equals LivePerson's dialogId 
+                        event: event     
+                    });
                 }
+            });
 
-                if (activity.suggestedActions !== undefined) {
-                    let quickReplies = ContentTranslator.msBotMessageWithSuggestedActionsToLPQuickReplies(activity.suggestedActions);
-                    event = {...event, quickReplies } 
-                }
-
-                this.livePersonAgent.publishEvent({
-                    dialogId: activity.conversation.id, // equals LivePerson's dialogId 
-                    event: event     
-                });
-            } else if (activity.attachments !== undefined) {
-                let content = ContentTranslator.msBotHeroCardsToLivePersonMessage(activity)
-                
-                //If we have quick replies lets add them
-                if(activity.suggestedActions != undefined){
-                    content.quickReplies = ContentTranslator.msBotMessageWithSuggestedActionsToLPQuickReplies(activity.suggestedActions);
-                }
-
-                //Send message
-                this.livePersonAgent.publishEvent({
-                    dialogId: activity.conversation.id,
-                    event: {
-                        type: 'RichContentEvent',
-                        content: content,
-
-                    }
-                }, this.logErrorMessage, [{type: 'ExternalId', id: 'MY_CARD_ID'}]);
-            }
-        });
-
-        return new Promise<boolean>((resolve) => {
             resolve(true);
-        });
+        });;
     }
 
     /**

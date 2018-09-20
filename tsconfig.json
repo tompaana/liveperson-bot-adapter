@@ -22,7 +22,7 @@
         "./src/liveperson/contenttranslator.ts",
         "./src/liveperson/livepersonagentlistener.ts",
         "./src/liveperson/livepersonbotadapter.ts",
-        "./src/liveperson/richcontent.ts",
+        "./src/liveperson/richcontentdefinitions.ts",
         "./src/middleware/testmiddleware.ts"
     ]
 }

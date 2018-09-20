@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 
-import ContentTranslator  from './contenttranslator';
+import { ContentTranslator } from './contenttranslator';
 import { LivePersonBotAdapter } from './livepersonbotadapter';
 
 /**
@@ -9,6 +9,12 @@ import { LivePersonBotAdapter } from './livepersonbotadapter';
 export class LivePersonAgentListener extends EventEmitter {
     public static CONNECTED: string = 'lp_connected';
     public static MESSAGE: string = 'lp_message';
+    private contentTranslator: ContentTranslator = null;
+
+    constructor(contentTranslator: ContentTranslator) {
+        super();
+        this.contentTranslator = contentTranslator;
+    }
 
     /**
      * Forwards the event, when the bot is connected as an agent.
@@ -30,6 +36,6 @@ export class LivePersonAgentListener extends EventEmitter {
     public onMessage(livePersonBotAdapter: LivePersonBotAdapter, contentEvent: any) {
         this.emit(
             LivePersonAgentListener.MESSAGE,
-            ContentTranslator.contentEventToTurnContext(contentEvent, livePersonBotAdapter));
+            this.contentTranslator.contentEventToTurnContext(contentEvent, livePersonBotAdapter));
     }
 }

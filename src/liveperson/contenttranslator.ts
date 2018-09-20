@@ -6,31 +6,27 @@ import {
     SuggestedActions,
     TurnContext } from 'botbuilder';
 
-import {
-    Button,
-    CardContent,
-    CarouselContent,
-    Element,
-    LinkButtonAction,
-    PostBackButtonAction,
-    RichContent,
-    TextElement,
-    QuickReplies,
-    QuickReply } from './richcontent'
+import * as RichContentDefinitions from './richcontentdefinitions';
 
 import { LivePersonBotAdapter } from './livepersonbotadapter';
 
 /*
  * Translation map
  * 
- * | LivePerson     | Microsoft Bot Framework              |
- * |----------------|--------------------------------------|
- * | dialogId       | Activity.conversation.id             |
- * | message        | Activity.text                        |
+ * | LivePerson  | Microsoft Bot Framework   |
+ * |-------------|---------------------------|
+ * | customerId  | Activity.channelData.id   |
+ * | dialogId    | Activity.conversation.id  |
+ * | message     | Activity.text             |
+ * 
  */
 
  /**
   * Translates content format between the Microsoft Bot Framework and the LivePerson system.
+  * 
+  * More details on rich content in LivePerson:
+  * - https://developers.liveperson.com/structured-content-templates-card.html
+  * - https://developers.liveperson.com/messaging-agent-sdk-conversation-metadata-guide.html
   */
 export class ContentTranslator {
     /**
@@ -41,11 +37,10 @@ export class ContentTranslator {
      * @returns A newly created TurnContext instance based on the given content event.
      */
     public contentEventToTurnContext(contentEvent, livePersonBotAdapter: LivePersonBotAdapter): TurnContext {
-        let channelData: ChannelAccount = 
-        {
-            id:contentEvent.customerId,
-            name:contentEvent.customerId,
-            role: "user"
+        let channelAccount: ChannelAccount = {
+            id: contentEvent.customerId,
+            name: contentEvent.customerId,
+            role: 'user'
         }
 
         let conversationAccount: ConversationAccount = {
@@ -58,9 +53,9 @@ export class ContentTranslator {
 
         let turnContext: TurnContext =
             new TurnContext(livePersonBotAdapter, {
-                channelData: channelData,
+                channelData: channelAccount,
                 conversation: conversationAccount,
-                channelId:"LivePerson",
+                channelId: 'liveperson',
                 text: contentEvent.message,
                 type: 'message',
              });
@@ -69,92 +64,109 @@ export class ContentTranslator {
     }
 
     /**
-     * We can display only One Card at a time!!!
-     * Translates the Microsoft Bot Framework rich content format (e.g. adaptive cards, messages
-     * with buttons etc.) into the LivePerson rich content format.
-     * See more details on rich content in LP here: https://developers.liveperson.com/structured-content-templates-card.html
-     * and here https://developers.liveperson.com/messaging-agent-sdk-conversation-metadata-guide.html
+     * Translates the given activity into LivePerson event.
      * 
-     * @param cards list of attachments
-     * @returns
+     * @param activity The activity to translate.
+     * @returns An event object ready to be used to send message via LivePerson.
      */
-    public msBotHeroCardsToLivePersonMessage(activity :Partial<Activity>): RichContent {
+    public activityToLivePersonEvent(activity: Partial<Activity>): any {
+        let event: object = {};
 
-        if(activity.attachmentLayout == "carousel"){
-            
-            let elements = new Array<RichContent>();
-            activity.attachments.forEach(element => {
-                elements.push(this.createCard(element.content));
-            });
-            let carousel : CarouselContent = new CarouselContent(elements);
-            console.log(JSON.stringify(carousel));
-            return carousel;
-        }
-        else
-        {
-            return this.createCard(activity.attachments[0].content);
-        }
-        
-    }
+        if (activity.text !== undefined) {
+            event = {
+                type: 'ContentEvent',
+                contentType: 'text/plain',
+                message: activity.text
+            }
 
-    createCard(card): CardContent
-    {
-        let elements = new Array<Element>();
-        elements.push(new TextElement(card.title,card.title));
-        
-        //First we are going to push title and subtitle
-        if(card.subtitle != undefined)
-            elements.push(new TextElement(card.title.subtitle,card.title.subtitle));
+            if (activity.suggestedActions !== undefined) {
+                let quickReplies = this.suggestedActionsToLivePersonQuickReplies(activity.suggestedActions);
+                event = { ...event, quickReplies };
+            }
+        } else if (activity.attachments !== undefined) {
+            let richContent: RichContentDefinitions.RichContent = null;
+
+            if (activity.attachmentLayout == 'carousel') {
+                let elements = new Array<RichContentDefinitions.RichContent>();
     
-        // if(card.images != undefined)
-        // {
-        //     card.images.forEach(element => {
-        //         elements.push(new Image(element.url, "tooltip"));
-        //     });
-        // }
+                activity.attachments.forEach(element => {
+                    elements.push(this.botFrameworkAttachmentToLivePersonCard(element.content));
+                });
+    
+                richContent = new RichContentDefinitions.CarouselContent(elements);
+            } else {
+                richContent = this.botFrameworkAttachmentToLivePersonCard(activity.attachments[0].content);
+            }
+    
+            if (activity.suggestedActions !== undefined) {
+                richContent.quickReplies = this.suggestedActionsToLivePersonQuickReplies(activity.suggestedActions);
+            }
 
-        if(card.buttons != undefined)
-        {
-            card.buttons.forEach(element => {
-                if(element.type == "imBack" || element.type == "postBack"){
-                    let action = new PostBackButtonAction(element.value);
-                    elements.push(new Button(element.title, element.title,[action]));
-                }
-                if(element.type == "openUrl")
-                {
-                    let action = new LinkButtonAction(element.title,element.value);
-                    elements.push(new Button(element.title, element.title,[action])); 
-                }
-            
-            });
+            event = {
+                type: 'RichContentEvent',
+                content: richContent,
+            }
         }
 
-        //First creating content of object and then only create object using interface
-        var richContent : RichContent = {type: "vertical", elements: elements};
-        return richContent;
+        return event;
     }
 
     /**
-     * We can display only One Card at a time!!!
-     * Translates the Microsoft Bot Framework rich content format (e.g. adaptive cards, messages
-     * with buttons etc.) into the LivePerson rich content format.
-     * See more details on rich content in LP here: https://developers.liveperson.com/structured-content-templates-card.html
-     * and here https://developers.liveperson.com/messaging-agent-sdk-conversation-metadata-guide.html
+     * Translates the given suggested actions to LivePerson quick replies.
      * 
-     * @param suggestedActions 
-     * @returns
+     * @param suggestedActions The suggested actions to translate.
+     * @returns LivePerson quick replies.
      */
-    public msBotMessageWithSuggestedActionsToLPQuickReplies(suggestedActions: SuggestedActions): any {
-        var quickReplies = new QuickReplies(4);
+    protected suggestedActionsToLivePersonQuickReplies(suggestedActions: SuggestedActions): any {
+        var quickReplies = new RichContentDefinitions.QuickReplies(4);
 
         if (suggestedActions !== undefined) {
             suggestedActions.actions.forEach(element => {
-                quickReplies.replies.push(new QuickReply(element.value, element.title))
+                quickReplies.replies.push(new RichContentDefinitions.QuickReply(element.value, element.title))
             });
         }
 
         return quickReplies;
     }
-}
 
-export default new ContentTranslator();
+    /**
+     * Translates the Bot Framework attachment content to LivePerson rich content.
+     * 
+     * @param botFrameworkAttachmentContent The Bot Framework attachment content (card).
+     * @returns A newly created LivePerson card content instance.
+     */
+    protected botFrameworkAttachmentToLivePersonCard(botFrameworkAttachmentContent): RichContentDefinitions.CardContent {
+        let elements = new Array<RichContentDefinitions.Element>();
+
+        elements.push(new RichContentDefinitions.TextElement(
+            botFrameworkAttachmentContent.title,
+            botFrameworkAttachmentContent.title));
+        
+        if (botFrameworkAttachmentContent.subtitle !== undefined) {
+            elements.push(new RichContentDefinitions.TextElement(
+                botFrameworkAttachmentContent.title.subtitle,
+                botFrameworkAttachmentContent.title.subtitle));
+        }
+
+        if (botFrameworkAttachmentContent.buttons !== undefined) {
+            botFrameworkAttachmentContent.buttons.forEach(element => {
+                if (element.type == 'imBack' || element.type == 'postBack') {
+                    let action = new RichContentDefinitions.PostBackButtonAction(element.value);
+                    elements.push(new RichContentDefinitions.Button(element.title, element.title, [action]));
+                }
+
+                if (element.type == 'openUrl') {
+                    let action = new RichContentDefinitions.LinkButtonAction(element.title,element.value);
+                    elements.push(new RichContentDefinitions.Button(element.title, element.title, [action])); 
+                }
+            });
+        }
+
+        let richContent: RichContentDefinitions.RichContent = {
+            type: 'vertical',
+            elements: elements
+        };
+
+        return richContent;
+    }
+}
