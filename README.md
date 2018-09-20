@@ -45,7 +45,7 @@ The heart of the project is the adapter class itself:
 is that one could simply replace the typically used
 [BotFrameworkAdapter](https://docs.microsoft.com/en-us/javascript/api/botbuilder/botframeworkadapter?view=botbuilder-ts-latest)
 with the `LivePersonBotAdapter` class.
-You can also run both in parallel! For isntance, you can reach the channels not supported by
+You can also run both in parallel! For example, you can reach the channels not supported by
 LivePerson using the Microsoft Bot Connector service. What makes this approach nice is that **no
 changes to the bot conversational logic (code) is required**!
 
@@ -81,6 +81,8 @@ livePersonBotAdapter.getListener().on(LivePersonAgentListener.MESSAGE, async (co
     });
 });
 ```
+
+See [`app.ts`](/src/app.ts) for reference.
 
 
 ## Resources ##
