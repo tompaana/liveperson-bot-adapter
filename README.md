@@ -2,6 +2,10 @@
 
 This is a sample bot to feature the LivePerson Bot adapter that enables the integration of the
 Microsoft Bot Framework to the [LivePerson](https://www.liveperson.com/) care agent system.
+In addition to simply revieving and sending messages, with the help of the
+[LivePerson Agent SDK](https://github.com/LivePersonInc/node-agent-sdk) the adapter unlocks all the
+features of the LivePerson service, such as transferring the conversation to a human care agent.
+Note that for some features additional code may be required.
 
 ![LivePerson Bot Adapter overview](/doc/liveperson-bot-adapter-overview.png)
 
@@ -33,6 +37,9 @@ Microsoft Bot Framework to the [LivePerson](https://www.liveperson.com/) care ag
     Or use the run scripts or the VS Code launch configuration to run using the IDE.
 
 4. Play with the code, deploy etc.
+
+## Implementation ##
+
 
 ## Resources ##
 
