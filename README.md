@@ -3,6 +3,8 @@
 This is a sample bot to feature the LivePerson Bot adapter that enables the integration of the
 Microsoft Bot Framework to the [LivePerson](https://www.liveperson.com/) care agent system.
 
+![LivePerson Bot Adapter overview](/doc/liveperson-bot-adapter-overview.png)
+
 ## Getting started ##
 
 0. Prerequisites:
