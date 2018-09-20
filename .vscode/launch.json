@@ -1,0 +1,56 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "LivePerson and Bot Framework Connector services",
+            "program": "${workspaceFolder}\\main.js",
+            "preLaunchTask": "tsc: build - tsconfig.json",
+            "env": {
+                "LP_ACCOUNT": "",
+                "LP_USER": "",
+                "LP_APP_KEY": "",
+                "LP_SECRET": "",
+                "LP_ACCESS_TOKEN": "",
+                "LP_ACCESS_TOKEN_SECRET": ""
+            },
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "LivePerson only",
+            "program": "${workspaceFolder}\\main.js",
+            "preLaunchTask": "tsc: build - tsconfig.json",
+            "args": [ "--lponly" ],
+            "env": {
+                "LP_ACCOUNT": "",
+                "LP_USER": "",
+                "LP_APP_KEY": "",
+                "LP_SECRET": "",
+                "LP_ACCESS_TOKEN": "",
+                "LP_ACCESS_TOKEN_SECRET": ""
+            },
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Bot Framework Connector service only",
+            "program": "${workspaceFolder}\\main.js",
+            "preLaunchTask": "tsc: build - tsconfig.json",
+            "args": [ "--bfonly" ],
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ]
+        }
+    ]
+}
