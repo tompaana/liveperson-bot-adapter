@@ -14,6 +14,7 @@
         "src/liveperson/*.ts"
       ],
       "exclude": [
+        "doc",
         "node_modules"
     ],
     "files": [

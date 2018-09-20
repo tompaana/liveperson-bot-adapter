@@ -40,6 +40,48 @@ Note that for some features additional code may be required.
 
 ## Implementation ##
 
+The heart of the project is the adapter class itself:
+[LivePersonBotAdapter](/src/liveperson/livepersonbotadapter.ts). The key principle of this approach
+is that one could simply replace the typically used
+[BotFrameworkAdapter](https://docs.microsoft.com/en-us/javascript/api/botbuilder/botframeworkadapter?view=botbuilder-ts-latest)
+with the `LivePersonBotAdapter` class.
+You can also run both in parallel! For isntance, you can reach the channels not supported by
+LivePerson using the Microsoft Bot Connector service. What makes this approach nice is that **no
+changes to the bot conversational logic (code) is required**!
+
+Using `BotFrameworkAdapter`:
+
+```js
+const botFrameworkAdapter = new BotFrameworkAdapter({ 
+    // Bot Framework credentials
+});
+
+botFrameworkAdapter.use(myMiddleware);
+
+// server is a restify server
+server.post("/api/messages", (request, response) => {
+    botFrameworkAdapter.processActivity(request, response, async (context) => {
+        // Bot logic code
+    });
+});
+```
+
+Using `LivePersonBotAdapter`:
+
+```js
+const livePersonBotAdapter = new LivePersonBotAdapter({
+    // LivePerson credentials
+});
+
+livePersonBotAdapter.use(myMiddleware);
+
+livePersonBotAdapter.getListener().on(LivePersonAgentListener.MESSAGE, async (context) => {
+    (context.adapter as LivePersonBotAdapter).runMiddleware(context, async (context) => {
+        // Bot logic code
+    });
+});
+```
+
 
 ## Resources ##
 
