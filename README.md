@@ -123,8 +123,9 @@ if (isViaLivePerson) {
 In addition, the channel ID value of activities (`context.activity.channelId`) originated from
 LivePerson is `'liveperson'`. See [`contenttranslator.ts`](/src/liveperson/contenttranslator.ts).
 
-**Disclaimer:** The content translation is not 100 %. Test your rich content scenarios and implement
-the gaps missing. Pull requests for such implementation are very welcome and much appreciated!
+**Disclaimer:** The `LivePersonBotAdapter` and the content translation is not 100 %. Test your rich
+content scenarios and implement the gaps missing. Pull requests for such contributions are very
+welcome and much appreciated!
 
 ## Resources ##
 
