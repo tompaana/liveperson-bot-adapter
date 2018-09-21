@@ -10,8 +10,8 @@ Note that for some features additional code may be required.
 
 ![LivePerson Bot Adapter overview](/doc/liveperson-bot-adapter-overview.png)
 
-The code here is an extract from a larger piece of work done by a team of my awesome colleagues,
-[Martin Kearn](https://github.com/martinkearn) and [Marek Lani](https://github.com/MarekLani), and
+The code here is an extract from a larger piece of work created by my awesome team mates,
+[Martin Kearn](https://github.com/martinkearn), [Marek Lani](https://github.com/MarekLani) and
 yours truly. Special kudos to Marek for writing the rich content translation bit.
 
 ## Getting started ##
