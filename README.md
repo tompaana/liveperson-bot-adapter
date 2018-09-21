@@ -1,13 +1,18 @@
 # LivePerson Bot Adapter #
 
-This is a sample bot to feature the LivePerson Bot adapter that enables the integration of the
-Microsoft Bot Framework to the [LivePerson](https://www.liveperson.com/) care agent system.
+This is a sample bot to feature the LivePerson Bot adapter that enables the integration of
+[the Microsoft Bot Framework](https://dev.botframework.com/) to the
+[LivePerson](https://www.liveperson.com/) care agent system.
 In addition to simply revieving and sending messages, with the help of the
 [LivePerson Agent SDK](https://github.com/LivePersonInc/node-agent-sdk) the adapter unlocks all the
 features of the LivePerson service, such as transferring the conversation to a human care agent.
 Note that for some features additional code may be required.
 
 ![LivePerson Bot Adapter overview](/doc/liveperson-bot-adapter-overview.png)
+
+The code here is an extract from a larger piece of work done by a team of my awesome colleagues,
+[Martin Kearn](https://github.com/martinkearn) and [Marek Lani](https://github.com/MarekLani), and
+yours truly. Special kudos to Marek for writing the rich content translation bit.
 
 ## Getting started ##
 
@@ -46,8 +51,10 @@ is that one could simply replace the typically used
 [BotFrameworkAdapter](https://docs.microsoft.com/en-us/javascript/api/botbuilder/botframeworkadapter?view=botbuilder-ts-latest)
 with the `LivePersonBotAdapter` class.
 You can also run both in parallel! For example, you can reach the channels not supported by
-LivePerson using the Microsoft Bot Connector service. What makes this approach nice is that **no
-changes to the bot conversational logic (code) is required**!
+LivePerson using
+[the Microsoft Bot Connector service](https://docs.microsoft.com/en-us/azure/bot-service/bot-service-manage-channels?view=azure-bot-service-4.0).
+What makes this approach nice is that **no changes to the bot conversational logic (code) is
+required**!
 
 Using `BotFrameworkAdapter`:
 
@@ -84,6 +91,40 @@ livePersonBotAdapter.getListener().on(LivePersonAgentListener.MESSAGE, async (co
 
 See [`app.ts`](/src/app.ts) for reference.
 
+Unsurprisingly, the format of the messages (protocol if you will) differ between the LivePerson
+system and the Bot Framework. It is the content translation that allows us to share common code for
+the bot logic regardless of which adapter class we use.
+
+The `LivePersonBotAdapter` class does the content translation from the LivePerson format into the
+Bot Framework format. The incoming messages are translated in the
+[`LivePersonAgentListener`](/src/liveperson/livepersonagentlistener.ts)
+class and the outgoing in the
+[`sendActivities`](https://github.com/tompaana/liveperson-bot-adapter/blob/4273c6e0037d006ead7283e6923bda753c6e7e03/src/liveperson/livepersonbotadapter.ts#L63)
+method of the `LivePersonBotAdapter` class by the content translator:
+[`ContentTranslator`](/src/liveperson/contenttranslator.ts).
+
+Although the bot logic code is shared, when using both the LivePerson and the Bot Framework
+Connector service, you might still want to diffentiate the bot behaviour depending the adapter.
+LivePerson enables features such as transferring the chat to another agent, which the Bot Framework
+Connector cannot do by default. To address situations like this in the bot logic code, you can apply
+the following approach:
+
+```js
+// context is a TurnContext instance
+const isViaLivePerson: boolean = (context.adapter instanceof LivePersonBotAdapter);
+
+if (isViaLivePerson) {
+    // LivePerson specific code here
+} else {
+    // Bot Framework Connector alternative
+}
+```
+
+In addition, the channel ID value of activities (`context.activity.channelId`) originated from
+LivePerson is `'liveperson'`. See [`contenttranslator.ts`](/src/liveperson/contenttranslator.ts).
+
+**Disclaimer:** The content translation is not 100 %. Test your rich content scenarios and implement
+the gaps missing. Pull requests for such implementation are very welcome and much appreciated!
 
 ## Resources ##
 
