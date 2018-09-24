@@ -47,7 +47,7 @@ yours truly. Special kudos to Marek for writing the rich content translation bit
 
 The heart of the project is the adapter class itself:
 [LivePersonBotAdapter](/src/liveperson/livepersonbotadapter.ts). The key principle of this approach
-is that one could simply replace the typically used
+is that one can simply replace the typically used
 [BotFrameworkAdapter](https://docs.microsoft.com/en-us/javascript/api/botbuilder/botframeworkadapter?view=botbuilder-ts-latest)
 with the `LivePersonBotAdapter` class.
 You can also run both in parallel! For example, you can reach the channels not supported by
@@ -100,14 +100,14 @@ Bot Framework format. The incoming messages are translated in the
 [`LivePersonAgentListener`](/src/liveperson/livepersonagentlistener.ts)
 class and the outgoing in the
 [`sendActivities`](https://github.com/tompaana/liveperson-bot-adapter/blob/4273c6e0037d006ead7283e6923bda753c6e7e03/src/liveperson/livepersonbotadapter.ts#L63)
-method of the `LivePersonBotAdapter` class by the content translator:
-[`ContentTranslator`](/src/liveperson/contenttranslator.ts).
+method of the `LivePersonBotAdapter` class by the
+[content translator](/src/liveperson/contenttranslator.ts).
 
 Although the bot logic code is shared, when using both the LivePerson and the Bot Framework
-Connector service, you might still want to diffentiate the bot behaviour depending the adapter.
+Connector service, you might still want to differentiate the bot behaviour depending on the adapter.
 LivePerson enables features such as transferring the chat to another agent, which the Bot Framework
-Connector cannot do by default. To address situations like this in the bot logic code, you can apply
-the following approach:
+Connector cannot do by default - to address situations like this in the bot logic code, you can
+apply the following approach:
 
 ```js
 // context is a TurnContext instance
@@ -123,9 +123,9 @@ if (isViaLivePerson) {
 In addition, the channel ID value of activities (`context.activity.channelId`) originated from
 LivePerson is `'liveperson'`. See [`contenttranslator.ts`](/src/liveperson/contenttranslator.ts).
 
-**Disclaimer:** The `LivePersonBotAdapter` and the content translation is not 100 %. Test your rich
-content scenarios and implement the gaps missing. Pull requests for such contributions are very
-welcome and much appreciated!
+**Disclaimer:** The `LivePersonBotAdapter` and the content translation is not 100 %. Test your 
+scenarios (especially related to rich content) and implement the gaps missing. Pull requests for
+such contributions are very welcome and much appreciated!
 
 ## Resources ##
 
