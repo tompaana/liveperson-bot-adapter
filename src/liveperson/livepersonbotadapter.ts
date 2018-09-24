@@ -61,7 +61,12 @@ export class LivePersonBotAdapter extends BotAdapter {
      * @param activities List of activities to send.
      */
     public sendActivities(context: TurnContext, activities: Partial<Activity>[]): Promise<any> {    
-        return new Promise<boolean>((resolve, reject) => {   
+        return new Promise<boolean>((resolve, reject) => {  
+            if (!this.livePersonAgent) {
+                reject('No LivePerson agent instance');
+                return;
+            }
+
             activities.forEach(activity => {
                 let event = this.contentTranslator.activityToLivePersonEvent(activity);
 
