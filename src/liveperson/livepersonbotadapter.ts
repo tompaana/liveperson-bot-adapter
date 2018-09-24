@@ -224,6 +224,7 @@ export class LivePersonBotAdapter extends BotAdapter {
         });
 
         this.livePersonAgent.on('ms.MessagingEventNotification',  body => {
+			let consumerId: string = "";
             const respond = {};
             body.changes.forEach(c => {
                 // In the current version MessagingEventNotification are recived also without subscription
@@ -231,6 +232,8 @@ export class LivePersonBotAdapter extends BotAdapter {
                 if (openConvs[c.dialogId]) {
                     // add to respond list all content event not by me
                     if (c.event.type === 'ContentEvent' && c.originatorId !== this.livePersonAgent.agentId) {
+						consumerId = c.originatorId;
+						
                         respond[`${body.dialogId}-${c.sequence}`] = {
                             dialogId: body.dialogId,
                             sequence: c.sequence,
@@ -254,8 +257,16 @@ export class LivePersonBotAdapter extends BotAdapter {
                     event: {type: 'AcceptStatusEvent', status: 'READ', sequenceList: [contentEvent.sequence]}
                 });
 
-                // Notify listener to process the received message
-                this.livePersonAgentListener.onMessage(this, contentEvent);
+                // Notify listener to process the received message and attach customerId from LivePerson to the message
+                this.livePersonAgent.getUserProfile(consumerId, (e, profileResp) => {
+                    let customerId:string = "";
+					if(profileResp != undefined){
+                        let ctmrInfo =  profileResp.filter(pr => pr.type == "ctmrinfo")[0];
+                        customerId = ctmrInfo.info.customerId;
+                    }
+                    let event = {...contentEvent, customerId};
+                    this.livePersonAgentListener.onMessage(this, event);    
+                });
             });
         });
 
