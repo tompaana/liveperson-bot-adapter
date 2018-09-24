@@ -24,7 +24,12 @@ export class ContextProcessor {
         if (isMessage) {
             const isViaLivePerson: boolean = (context.adapter instanceof LivePersonBotAdapter);
             const conversationState = this.conversationState.get(context);
-            conversationState.count++;
+
+            if (conversationState.count === undefined) {
+                conversationState.count = 1;
+            } else {
+                conversationState.count++;
+            }
 
             if (isViaLivePerson) {
                 await context.sendActivity(`${conversationState.count}: You said via LivePerson: ${context.activity.text}`);
