@@ -1,9 +1,32 @@
 import * as restify from 'restify';
+import * as path from 'path';
 import { BotFrameworkAdapter, ConversationState, MemoryStorage } from 'botbuilder';
+import { BotConfiguration } from 'botframework-config';
 import { LivePersonBotAdapter } from './liveperson/livepersonbotadapter';
 import { LivePersonAgentListener } from "./liveperson/livepersonagentlistener";
-import { ContextProcessor, MyConversationState } from './contextprocessor';
+import { LivePersonBot } from './livepersonbot';
 import { TestMiddleware } from './middleware/testmiddleware';
+
+// Read botFilePath and botFileSecret from .env file
+// Note: Ensure you have a .env file and include botFilePath and botFileSecret.
+const ENV_FILE = path.join(__dirname, '../.env');
+console.log(`Expecting to find .env file in ${ENV_FILE}`);
+const env = require('dotenv').config({ path: ENV_FILE });
+
+// Get the .bot file path
+// See https://aka.ms/about-bot-file to learn more about .bot file its use and bot configuration.
+const BOT_FILE = path.join(__dirname, ('../' + process.env.botFilePath || '../'));
+let botConfig;
+try {
+    // Read bot configuration from .bot file.
+    botConfig = BotConfiguration.loadSync(BOT_FILE, process.env.botFileSecret);
+} catch (err) {
+    console.error(`\nError reading bot file. Please ensure you have valid botFilePath and botFileSecret set for your environment.`);
+    console.error(`\n - The botFileSecret is available under appsettings for your Azure Bot Service bot.`);
+    console.error(`\n - If you are running this bot locally, consider adding a .env file with botFilePath and botFileSecret.`);
+    console.error(`\n - See https://aka.ms/about-bot-file to learn more about .bot file its use and bot configuration.\n\n`);
+    process.exit();
+}
 
 const ARGUMENT_BOT_FRAMEWORK_ADAPTER_ONLY = '--bfonly'
 const ARGUMENT_LIVEPERSON_ONLY = '--lponly';
@@ -26,9 +49,14 @@ if (process.argv.length > 2) {
     }
 }
 
-const conversationState = new ConversationState<MyConversationState>(new MemoryStorage()); // MyConversationState is defined in contextprocessor.ts
+const COUNT_STATE: string = 'count';
+const conversationState = new ConversationState(new MemoryStorage());
+conversationState.createProperty(COUNT_STATE);
+
 const testMiddleware = new TestMiddleware();
-const contextProcessor = new ContextProcessor(conversationState);
+
+// Create the main dialog.
+const bot = new LivePersonBot(conversationState);
 
 if (useBotFrameworkAdapter) {
     // Create the Bot Framework adapter
@@ -37,8 +65,19 @@ if (useBotFrameworkAdapter) {
         appPassword: process.env.MicrosoftAppPassword 
     });
 
-    botFrameworkAdapter.use(conversationState);
     botFrameworkAdapter.use(testMiddleware);
+
+    // Catch-all for any unhandled errors in your bot.
+    botFrameworkAdapter.onTurnError = async (context, error) => {
+        // This check writes out errors to console log .vs. app insights.
+        console.error(`\n [onTurnError]: ${ error }`);
+        // Send a message to the user
+        context.sendActivity(`Oops. Something went wrong!`);
+        // Clear out state
+        await conversationState.clear(context);
+        // Save state changes.
+        await conversationState.saveChanges(context);
+    };
 
     // Create and start the server
     const server = restify.createServer();
@@ -50,7 +89,7 @@ if (useBotFrameworkAdapter) {
     // Process events from Microsoft Bot Connector service
     server.post("/api/messages", (request, response) => {
         botFrameworkAdapter.processActivity(request, response, async (context) => {
-            await contextProcessor.processContext(context);
+            await bot.onTurn(context);
         });
     });
 }
@@ -82,13 +121,24 @@ if (useLivePersonAdapter) {
 
     // Create the LivePerson bot adapter
     const livePersonBotAdapter = new LivePersonBotAdapter(livePersonConfiguration);
-    livePersonBotAdapter.use(conversationState);
     livePersonBotAdapter.use(testMiddleware);
+
+    // Catch-all for any unhandled errors in your bot.
+    livePersonBotAdapter.onTurnError = async (context, error) => {
+        // This check writes out errors to console log .vs. app insights.
+        console.error(`\n [onTurnError]: ${ error }`);
+        // Send a message to the user
+        context.sendActivity(`Oops. Something went wrong!`);
+        // Clear out state
+        await conversationState.clear(context);
+        // Save state changes.
+        await conversationState.saveChanges(context);
+    };
 
     // Process events from LivePerson service
     livePersonBotAdapter.getListener().on(LivePersonAgentListener.MESSAGE, async (context) => {
         (context.adapter as LivePersonBotAdapter).runMiddleware(context, async (context) => {
-            await contextProcessor.processContext(context);
+            await bot.onTurn(context);
         });
     });
 }

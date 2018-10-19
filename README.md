@@ -86,8 +86,7 @@ Connector cannot do by default - to address situations like this in the bot logi
 apply the following approach:
 
 ```js
-// context is a TurnContext instance
-const isViaLivePerson: boolean = (context.adapter instanceof LivePersonBotAdapter);
+const isViaLivePerson: boolean = (turnContext.adapter instanceof LivePersonBotAdapter);
 
 if (isViaLivePerson) {
     // LivePerson specific code here

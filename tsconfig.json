@@ -19,7 +19,7 @@
     ],
     "files": [
         "./src/app.ts",
-        "./src/contextprocessor.ts",
+        "./src/livepersonbot.ts",
         "./src/liveperson/contenttranslator.ts",
         "./src/liveperson/livepersonagentlistener.ts",
         "./src/liveperson/livepersonbotadapter.ts",

@@ -1,5 +1,5 @@
 import { Agent } from 'node-agent-sdk';
-import { BotAdapter, Promiseable, TurnContext } from 'botbuilder';
+import { BotAdapter, TurnContext } from 'botbuilder';
 import { Activity, ConversationReference } from 'botframework-schema';
 
 import { ContentTranslator } from './contenttranslator';
@@ -136,7 +136,7 @@ export class LivePersonBotAdapter extends BotAdapter {
         throw new Error("processActivity method is not implemented for LivePersonBotAdapter");
     }
 
-    public continueConversation(reference: Partial<ConversationReference>, logic: (revocableContext: TurnContext) => Promiseable<any>): Promise<any> {
+    public continueConversation(reference: Partial<ConversationReference>, logic: (revocableContext: TurnContext) => Promise<void>): Promise<void> {
         throw new Error("Method not implemented.");
     }
 
