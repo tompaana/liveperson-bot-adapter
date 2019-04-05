@@ -199,5 +199,7 @@ export enum ElementTypes {
   FactSet = "FactSet",
   TextBlock = "TextBlock",
   ImageSet = "ImageSet",
-  Image = "Image"
+  Image = "Image",
+  Media = "Media"
 }
+

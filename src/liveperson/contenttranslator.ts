@@ -58,7 +58,7 @@ const days = [
   "Saturday"
 ];
 
-import { LivePersonBotAdapter } from './livepersonbotadapter';
+import { LivePersonBotAdapter } from "./livepersonbotadapter";
 
 /*
  * Translation map
@@ -86,31 +86,33 @@ export class ContentTranslator {
    * @param livePersonBotAdapter The LivePerson bot adapter.
    * @returns A newly created TurnContext instance based on the given content event.
    */
-  public contentEventToTurnContext(contentEvent, livePersonBotAdapter: LivePersonBotAdapter): TurnContext {
-      let channelAccount: ChannelAccount = {
-          id: contentEvent.customerId,
-          name: contentEvent.customerId,
-          role: 'user'
-      }
+  public contentEventToTurnContext(
+    contentEvent,
+    livePersonBotAdapter: LivePersonBotAdapter
+  ): TurnContext {
+    let channelAccount: ChannelAccount = {
+      id: contentEvent.customerId,
+      name: contentEvent.customerId,
+      role: "user"
+    };
 
-      let conversationAccount: ConversationAccount = {
-          isGroup: false,
-          conversationType: '',
-          id: contentEvent.dialogId,
-          name: '',
-          role: RoleTypes.User,
-      };
+    let conversationAccount: ConversationAccount = {
+      isGroup: false,
+      conversationType: "",
+      id: contentEvent.dialogId,
+      name: "",
+      role: RoleTypes.User
+    };
 
-      let turnContext: TurnContext =
-          new TurnContext(livePersonBotAdapter, {
-              channelData: channelAccount,
-              conversation: conversationAccount,
-              channelId: 'liveperson',
-              text: contentEvent.message,
-              type: 'message',
-           });
+    let turnContext: TurnContext = new TurnContext(livePersonBotAdapter, {
+      channelData: channelAccount,
+      conversation: conversationAccount,
+      channelId: "liveperson",
+      text: contentEvent.message,
+      type: "message"
+    });
 
-      return turnContext;
+    return turnContext;
   }
 
   /**
@@ -193,6 +195,38 @@ export class ContentTranslator {
     }
 
     return quickReplies;
+  }
+
+  /**
+   * Check and convert the Bot Framework fact value to LivePerson messag or link button.
+   *
+   * @param botFrameworkFactValue The Bot Framework fact value.
+   * @returns LivePerson element.
+   */
+  protected botFrameworkFactToLivePersonElement(
+    botFrameworkFactValue: string
+  ): RichContentDefinitions.Element {
+    const titleRegex = /^\[(.*?)\]/;
+    const linkRegex = /\((.*?)\)/;
+
+    const title = botFrameworkFactValue.match(titleRegex);
+    const url = botFrameworkFactValue.match(linkRegex);
+
+    if (title && url) {
+      let buttonAction = new RichContentDefinitions.LinkButtonAction(
+        title[1],
+        url[1]
+      );
+
+      return new RichContentDefinitions.Button(title[1], title[1], [
+        buttonAction
+      ]);
+    } else {
+      return new RichContentDefinitions.TextElement(
+        botFrameworkFactValue,
+        botFrameworkFactValue
+      );
+    }
   }
 
   /**
@@ -302,7 +336,7 @@ export class ContentTranslator {
           })
         );
         horizontal.elements.push(
-          new RichContentDefinitions.TextElement(fact.value, fact.value)
+          this.botFrameworkFactToLivePersonElement(fact.value)
         );
       });
     } else if (type === RichContentDefinitions.ElementTypes.ImageSet) {
@@ -320,7 +354,7 @@ export class ContentTranslator {
       }
 
       if (size) {
-        style.size = size;
+        style.size = size.toLowerCase();
       }
 
       const leText = this.botFrameworkMessageToLivePersonMessage(text);
@@ -331,6 +365,14 @@ export class ContentTranslator {
     } else if (type === RichContentDefinitions.ElementTypes.Image) {
       const { url } = botFrameworkItem;
       elements.push(new RichContentDefinitions.Image(url, "image tooltip"));
+    } else if (type === RichContentDefinitions.ElementTypes.Media) {
+      const { poster } = botFrameworkItem;
+
+      if (poster) {
+        elements.push(
+          new RichContentDefinitions.Image(poster, "image tooltip")
+        );
+      }
     }
   }
 
@@ -451,3 +493,4 @@ export class ContentTranslator {
     return richContent;
   }
 }
+
