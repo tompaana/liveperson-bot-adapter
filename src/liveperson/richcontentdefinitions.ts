@@ -107,6 +107,7 @@ export class PostBackButtonAction extends ButtonActions {
  */
 export interface ITextElementStyle {
   size?: string;
+  color?: string;
   bold?: boolean;
 }
 
@@ -202,4 +203,3 @@ export enum ElementTypes {
   Image = "Image",
   Media = "Media"
 }
-

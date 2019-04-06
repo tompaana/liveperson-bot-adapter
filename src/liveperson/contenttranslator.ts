@@ -8,6 +8,7 @@ import {
 } from "botbuilder";
 
 import * as RichContentDefinitions from "./richcontentdefinitions";
+import { LivePersonBotAdapter } from "./livepersonbotadapter";
 
 /**
  * Get day of month suffix
@@ -57,8 +58,6 @@ const days = [
   "Friday",
   "Saturday"
 ];
-
-import { LivePersonBotAdapter } from "./livepersonbotadapter";
 
 /*
  * Translation map
@@ -346,7 +345,7 @@ export class ContentTranslator {
         this.botFrameworkItemToLivePersonElement(image, horizontal.elements);
       });
     } else if (type === RichContentDefinitions.ElementTypes.TextBlock) {
-      const { text, weight, size } = botFrameworkItem;
+      const { text, weight, size, color } = botFrameworkItem;
 
       const style: any = {};
       if (weight) {
@@ -355,6 +354,10 @@ export class ContentTranslator {
 
       if (size) {
         style.size = size.toLowerCase();
+      }
+
+      if (color) {
+        style.color = color;
       }
 
       const leText = this.botFrameworkMessageToLivePersonMessage(text);
@@ -493,4 +496,3 @@ export class ContentTranslator {
     return richContent;
   }
 }
-
