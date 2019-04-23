@@ -56,13 +56,18 @@ export class Button extends ElementWithTooltip {
   constructor(
     tooltip: string,
     title: string,
-    buttonActions: Array<ButtonActions>
+    buttonActions: Array<ButtonActions>,
+    metadata: any = null
   ) {
     super();
     this.type = "button";
     this.tooltip = tooltip;
     this.title = title;
     this.click = { actions: buttonActions };
+
+    if (metadata) {
+      this.click.metadata = metadata;
+    }
   }
 }
 
@@ -108,7 +113,9 @@ export class PostBackButtonAction extends ButtonActions {
 export interface ITextElementStyle {
   size?: string;
   color?: string;
+  "background-color"?: string;
   bold?: boolean;
+  italic?: boolean;
 }
 
 /**

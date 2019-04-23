@@ -35,6 +35,21 @@ const getDayOfMonthSuffix = (n: number) => {
   }
 };
 
+/**
+ * Get action metadata
+ * @param action object
+ * @return metadata object
+ **/
+const getActionMetadata = (action: any): any => {
+  const metadata = Object.assign({}, action);
+
+  delete metadata.type;
+  delete metadata.title;
+  delete metadata.url;
+
+  return Object.keys(metadata).length ? [metadata] : null;
+};
+
 const months = [
   "January",
   "February",
@@ -390,6 +405,7 @@ export class ContentTranslator {
     elements: Array<RichContentDefinitions.Element>
   ): void {
     const { type, title } = action;
+    const metadata = getActionMetadata(action);
 
     if (type === "Action.OpenUrl") {
       const { url } = action;
@@ -400,14 +416,24 @@ export class ContentTranslator {
       );
 
       elements.push(
-        new RichContentDefinitions.Button(title, title, [buttonAction])
+        new RichContentDefinitions.Button(
+          title,
+          title,
+          [buttonAction],
+          metadata
+        )
       );
     } else {
       let buttonAction = new RichContentDefinitions.PostBackButtonAction(
         action.value
       );
       elements.push(
-        new RichContentDefinitions.Button(action.title, action.title, [])
+        new RichContentDefinitions.Button(
+          action.title,
+          action.title,
+          [],
+          metadata
+        )
       );
     }
   }
@@ -463,14 +489,19 @@ export class ContentTranslator {
 
     if (botFrameworkAttachmentContent.buttons !== undefined) {
       botFrameworkAttachmentContent.buttons.forEach(element => {
+        const metadata = getActionMetadata(element);
+
         if (element.type == "imBack" || element.type == "postBack") {
           let action = new RichContentDefinitions.PostBackButtonAction(
             element.value
           );
           elements.push(
-            new RichContentDefinitions.Button(element.title, element.title, [
-              action
-            ])
+            new RichContentDefinitions.Button(
+              element.title,
+              element.title,
+              [action],
+              metadata
+            )
           );
         }
 
@@ -480,9 +511,12 @@ export class ContentTranslator {
             element.value
           );
           elements.push(
-            new RichContentDefinitions.Button(element.title, element.title, [
-              action
-            ])
+            new RichContentDefinitions.Button(
+              element.title,
+              element.title,
+              [action],
+              metadata
+            )
           );
         }
       });
