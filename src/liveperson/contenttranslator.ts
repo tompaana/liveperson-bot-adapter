@@ -153,13 +153,57 @@ export class ContentTranslator {
       }
     }
 
-    if (activity.attachments !== undefined) {
+    const {
+      type,
+      // @ts-ignore
+      body,
+      // @ts-ignore
+      actions,
+      attachments,
+      attachmentLayout,
+      suggestedActions
+    } = activity;
+
+    if (
+      type === "AdaptiveCard" &&
+      (body !== undefined || actions !== undefined)
+    ) {
+      let elements = new Array<RichContentDefinitions.Element>();
+
+      let richContent: RichContentDefinitions.RichContent = {
+        type: "vertical",
+        elements: elements
+      };
+
+      // translate items
+      body.forEach(item => {
+        this.botFrameworkItemToLivePersonElement(item, elements);
+      });
+
+      // translate actions
+      if (actions && actions.length) {
+        const horizontal = new RichContentDefinitions.Container("horizontal");
+        elements.push(horizontal);
+
+        actions.forEach(action => {
+          this.botFrameworkActionToLivePersonElement(
+            action,
+            horizontal.elements
+          );
+        });
+      }
+
+      event.type = "RichContentEvent";
+      event.content = richContent;
+    }
+
+    if (attachments !== undefined) {
       let richContent: RichContentDefinitions.RichContent = null;
 
-      if (activity.attachmentLayout == "carousel") {
+      if (attachmentLayout == "carousel") {
         let elements = new Array<RichContentDefinitions.RichContent>();
 
-        activity.attachments.forEach(element => {
+        attachments.forEach(element => {
           elements.push(
             this.botFrameworkAttachmentToLivePersonCard(element.content)
           );
@@ -168,13 +212,13 @@ export class ContentTranslator {
         richContent = new RichContentDefinitions.CarouselContent(elements);
       } else {
         richContent = this.botFrameworkAttachmentToLivePersonCard(
-          activity.attachments[0].content
+          attachments[0].content
         );
       }
 
-      if (activity.suggestedActions !== undefined) {
+      if (suggestedActions !== undefined) {
         richContent.quickReplies = this.suggestedActionsToLivePersonQuickReplies(
-          activity.suggestedActions
+          suggestedActions
         );
       }
 
