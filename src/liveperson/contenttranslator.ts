@@ -469,13 +469,13 @@ export class ContentTranslator {
       );
     } else {
       let buttonAction = new RichContentDefinitions.PostBackButtonAction(
-        action.value
+        action.title
       );
       elements.push(
         new RichContentDefinitions.Button(
           action.title,
           action.title,
-          [],
+          [buttonAction],
           metadata
         )
       );
