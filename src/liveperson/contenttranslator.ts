@@ -38,16 +38,11 @@ const getDayOfMonthSuffix = (n: number) => {
 /**
  * Get action metadata
  * @param action object
- * @return metadata object
+ * @return metadata id object
  **/
 const getActionMetadata = (action: any): any => {
-  const metadata = Object.assign({}, action);
-
-  delete metadata.type;
-  delete metadata.title;
-  delete metadata.url;
-
-  return Object.keys(metadata).length ? [metadata] : null;
+  const { id } = action;
+  return id ? [{ id, type: "ExternalId" }] : null;
 };
 
 const months = [
