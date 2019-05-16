@@ -113,13 +113,19 @@ export class ContentTranslator {
       role: RoleTypes.User
     };
 
-    let turnContext: TurnContext = new TurnContext(livePersonBotAdapter, {
+    const message: any = {
       channelData: channelAccount,
       conversation: conversationAccount,
       channelId: "liveperson",
       text: contentEvent.message,
       type: "message"
-    });
+    }
+
+    if(Array.isArray(contentEvent.metadata) && contentEvent.metadata[0] && contentEvent.metadata[0].id){
+      message.id = contentEvent.metadata[0].id;
+    }
+
+    let turnContext: TurnContext = new TurnContext(livePersonBotAdapter, message);
 
     return turnContext;
   }
