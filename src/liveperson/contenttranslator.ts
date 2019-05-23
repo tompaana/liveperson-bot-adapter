@@ -35,6 +35,16 @@ const getDayOfMonthSuffix = (n: number) => {
   }
 };
 
+/**
+ * Get action metadata
+ * @param action object
+ * @return metadata id object
+ **/
+const getActionMetadata = (action: any): any => {
+  const { id } = action;
+  return id ? [{ id, type: "ExternalId" }] : null;
+};
+
 const months = [
   "January",
   "February",
@@ -103,13 +113,19 @@ export class ContentTranslator {
       role: RoleTypes.User
     };
 
-    let turnContext: TurnContext = new TurnContext(livePersonBotAdapter, {
+    const message: any = {
       channelData: channelAccount,
       conversation: conversationAccount,
       channelId: "liveperson",
       text: contentEvent.message,
       type: "message"
-    });
+    }
+
+    if(Array.isArray(contentEvent.metadata) && contentEvent.metadata[0] && contentEvent.metadata[0].id){
+      message.id = contentEvent.metadata[0].id;
+    }
+
+    let turnContext: TurnContext = new TurnContext(livePersonBotAdapter, message);
 
     return turnContext;
   }
@@ -138,13 +154,57 @@ export class ContentTranslator {
       }
     }
 
-    if (activity.attachments !== undefined) {
+    const {
+      type,
+      // @ts-ignore
+      body,
+      // @ts-ignore
+      actions,
+      attachments,
+      attachmentLayout,
+      suggestedActions
+    } = activity;
+
+    if (
+      type === "AdaptiveCard" &&
+      (body !== undefined || actions !== undefined)
+    ) {
+      let elements = new Array<RichContentDefinitions.Element>();
+
+      let richContent: RichContentDefinitions.RichContent = {
+        type: "vertical",
+        elements: elements
+      };
+
+      // translate items
+      body.forEach(item => {
+        this.botFrameworkItemToLivePersonElement(item, elements);
+      });
+
+      // translate actions
+      if (actions && actions.length) {
+        const horizontal = new RichContentDefinitions.Container("horizontal");
+        elements.push(horizontal);
+
+        actions.forEach(action => {
+          this.botFrameworkActionToLivePersonElement(
+            action,
+            horizontal.elements
+          );
+        });
+      }
+
+      event.type = "RichContentEvent";
+      event.content = richContent;
+    }
+
+    if (attachments !== undefined) {
       let richContent: RichContentDefinitions.RichContent = null;
 
-      if (activity.attachmentLayout == "carousel") {
+      if (attachmentLayout == "carousel") {
         let elements = new Array<RichContentDefinitions.RichContent>();
 
-        activity.attachments.forEach(element => {
+        attachments.forEach(element => {
           elements.push(
             this.botFrameworkAttachmentToLivePersonCard(element.content)
           );
@@ -153,13 +213,13 @@ export class ContentTranslator {
         richContent = new RichContentDefinitions.CarouselContent(elements);
       } else {
         richContent = this.botFrameworkAttachmentToLivePersonCard(
-          activity.attachments[0].content
+          attachments[0].content
         );
       }
 
-      if (activity.suggestedActions !== undefined) {
+      if (suggestedActions !== undefined) {
         richContent.quickReplies = this.suggestedActionsToLivePersonQuickReplies(
-          activity.suggestedActions
+          suggestedActions
         );
       }
 
@@ -390,6 +450,7 @@ export class ContentTranslator {
     elements: Array<RichContentDefinitions.Element>
   ): void {
     const { type, title } = action;
+    const metadata = getActionMetadata(action);
 
     if (type === "Action.OpenUrl") {
       const { url } = action;
@@ -400,14 +461,24 @@ export class ContentTranslator {
       );
 
       elements.push(
-        new RichContentDefinitions.Button(title, title, [buttonAction])
+        new RichContentDefinitions.Button(
+          title,
+          title,
+          [buttonAction],
+          metadata
+        )
       );
     } else {
       let buttonAction = new RichContentDefinitions.PostBackButtonAction(
-        action.value
+        action.title
       );
       elements.push(
-        new RichContentDefinitions.Button(action.title, action.title, [])
+        new RichContentDefinitions.Button(
+          action.title,
+          action.title,
+          [buttonAction],
+          metadata
+        )
       );
     }
   }
@@ -463,14 +534,19 @@ export class ContentTranslator {
 
     if (botFrameworkAttachmentContent.buttons !== undefined) {
       botFrameworkAttachmentContent.buttons.forEach(element => {
+        const metadata = getActionMetadata(element);
+
         if (element.type == "imBack" || element.type == "postBack") {
           let action = new RichContentDefinitions.PostBackButtonAction(
             element.value
           );
           elements.push(
-            new RichContentDefinitions.Button(element.title, element.title, [
-              action
-            ])
+            new RichContentDefinitions.Button(
+              element.title,
+              element.title,
+              [action],
+              metadata
+            )
           );
         }
 
@@ -480,9 +556,12 @@ export class ContentTranslator {
             element.value
           );
           elements.push(
-            new RichContentDefinitions.Button(element.title, element.title, [
-              action
-            ])
+            new RichContentDefinitions.Button(
+              element.title,
+              element.title,
+              [action],
+              metadata
+            )
           );
         }
       });

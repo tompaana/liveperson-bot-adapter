@@ -7,9 +7,9 @@ import { LivePersonAgentListener } from './livepersonagentlistener';
 
 /**
  * LivePerson bot adapter.
- * 
+ *
  * This is the proxy between the LivePerson system and the bot logic.
- * 
+ *
  * See https://github.com/LivePersonInc/node-agent-sdk for LivePerson Agent SDK documentation/code.
  */
 export class LivePersonBotAdapter extends BotAdapter {
@@ -20,7 +20,7 @@ export class LivePersonBotAdapter extends BotAdapter {
 
     /**
      * Constructor.
-     * 
+     *
      * @param livePersonConfiguration The LivePerson configuration including the credentials.
      */
     constructor(livePersonConfiguration: any) {
@@ -54,14 +54,14 @@ export class LivePersonBotAdapter extends BotAdapter {
     /**
      * From BotAdapter.
      * Sends the replies of the bot to the LivePerson system after the content translation.
-     * 
+     *
      * See https://github.com/Microsoft/botbuilder-js/blob/master/libraries/botbuilder/src/botFrameworkAdapter.ts#L500 for reference.
-     * 
+     *
      * @param context Context for the current turn of conversation with the user.
      * @param activities List of activities to send.
      */
-    public sendActivities(context: TurnContext, activities: Partial<Activity>[]): Promise<any> {    
-        return new Promise<boolean>((resolve, reject) => {  
+    public sendActivities(context: TurnContext, activities: Partial<Activity>[]): Promise<any> {
+        return new Promise<boolean>((resolve, reject) => {
             if (!this.livePersonAgent) {
                 reject('No LivePerson agent instance');
                 return;
@@ -77,8 +77,8 @@ export class LivePersonBotAdapter extends BotAdapter {
                     }, this.logErrorMessage, [{type: 'ExternalId', id: 'MY_CARD_ID'}]);
                 } else {
                     this.livePersonAgent.publishEvent({
-                        dialogId: activity.conversation.id, // equals LivePerson's dialogId 
-                        event: event     
+                        dialogId: activity.conversation.id, // equals LivePerson's dialogId
+                        event: event
                     });
                 }
             });
@@ -89,7 +89,7 @@ export class LivePersonBotAdapter extends BotAdapter {
 
     /**
      * Transfers the conversation matching the given dialog ID to another agent.
-     * 
+     *
      * @param dialogId The LivePerson dialog ID.
      * @param targetSkillId The skill the new agent needs to have.
      */
@@ -120,9 +120,9 @@ export class LivePersonBotAdapter extends BotAdapter {
     /**
      * Exposes the runMiddleware method, which is a protected method defined in BotAdapter.
      * Call this method explicitly to let the middleware layer to process the context.
-     * 
-     * @param context 
-     * @param next 
+     *
+     * @param context
+     * @param next
      */
     public runMiddleware(context: TurnContext, next: (revocableContext: TurnContext) => Promise<void>): Promise<void> {
         return super.runMiddleware(context, next);
@@ -152,7 +152,7 @@ export class LivePersonBotAdapter extends BotAdapter {
      * Initializes the LivePerson agent; subscribes to events and sets the agent status online.
      * The event handlers here will forward the selected events to bot logic using the
      * LivePersonAgentListener class.
-     * 
+     *
      * The content of thiss method is based the code, in LivePerson repository, licensed under MIT
      * (copyrighted by LivePerson):
      * - Code: https://github.com/LivePersonInc/node-agent-sdk/blob/master/examples/agent-bot/MyCoolAgent.js
@@ -227,17 +227,19 @@ export class LivePersonBotAdapter extends BotAdapter {
 			let consumerId: string = "";
             const respond = {};
             body.changes.forEach(c => {
+
                 // In the current version MessagingEventNotification are recived also without subscription
                 // Will be fixed in the next api version. So we have to check if this notification is handled by us.
                 if (openConvs[c.dialogId]) {
                     // add to respond list all content event not by me
                     if (c.event.type === 'ContentEvent' && c.originatorId !== this.livePersonAgent.agentId) {
 						consumerId = c.originatorId;
-						
+
                         respond[`${body.dialogId}-${c.sequence}`] = {
                             dialogId: body.dialogId,
                             sequence: c.sequence,
-                            message: c.event.message
+                            message: c.event.message,
+                            metadata: c.metadata
                         };
                     }
                     // remove from respond list all the messages that were already read
@@ -265,7 +267,7 @@ export class LivePersonBotAdapter extends BotAdapter {
                         customerId = ctmrInfo.info.customerId;
                     }
                     let event = {...contentEvent, customerId};
-                    this.livePersonAgentListener.onMessage(this, event);    
+                    this.livePersonAgentListener.onMessage(this, event);
                 });
             });
         });
